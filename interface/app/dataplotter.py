@@ -17,6 +17,7 @@ def plot_last_runs(nRuns = 10, filename = "../log.h5"):
     for r in runs:
         plot_recording(runName = r, filename = filename)
     return runs
+
 def plot_recording(rInd = -1, runName = None, filename = "../log.h5"):
     if runName is None:
         with h5py.File(filename, mode='r') as h5f:
@@ -69,7 +70,7 @@ def plot_recording(rInd = -1, runName = None, filename = "../log.h5"):
         #plt.grid()
         #plt.show()
         plt.savefig(image_dir, bbox_inches='tight')
-        return fig
+        plt.close(fig)
 
 
 
