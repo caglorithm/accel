@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Hi, {{ user.username }}!</h1>
+    <p>Displaying last {{nRuns}} recordings ...<p><br>        
+    {% for run in runs %}
+    <div>
+    <div><p>Session name:<b> {{ run.name }} </b></p></div>
+    <div><img src="static/images/{{ run.name }}.png"></div>
+    </div>
+    {% endfor %}        
+{% endblock %}
