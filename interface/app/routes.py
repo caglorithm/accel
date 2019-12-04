@@ -16,7 +16,7 @@ def index():
         except:
             nRuns = 15
     
-    user = {'username': 'Caglar' }
+    user = {'username': 'caglorithm' }
     
     
     runNames = plot_last_runs(nRuns)

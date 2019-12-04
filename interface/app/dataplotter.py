@@ -10,14 +10,14 @@ import os
 
 STATIC_IMAGES_DIR = 'app/static/images/'
 
-def plot_last_runs(nRuns = 10, filename = "../log2.h5"):
+def plot_last_runs(nRuns = 10, filename = "../log.h5"):
     with h5py.File(filename, mode='r') as h5f:
         runs = list(h5f.keys())
     runs = runs[-nRuns:][::-1]
     for r in runs:
         plot_recording(runName = r, filename = filename)
     return runs
-def plot_recording(rInd = -1, runName = None, filename = "../log2.h5"):
+def plot_recording(rInd = -1, runName = None, filename = "../log.h5"):
     if runName is None:
         with h5py.File(filename, mode='r') as h5f:
             runs = list(h5f.keys())
@@ -25,7 +25,7 @@ def plot_recording(rInd = -1, runName = None, filename = "../log2.h5"):
         
     image_dir = os.path.join(STATIC_IMAGES_DIR, "{}.png".format(runName))
     if os.path.isfile(image_dir):
-        print("File {} exists... loading {}".format(image_dir, runName))
+        print("File {} exists...".format(image_dir))
     else:
         with h5py.File(filename, mode='r') as h5f:
             runs = list(h5f.keys())
