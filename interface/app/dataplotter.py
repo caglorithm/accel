@@ -10,7 +10,7 @@ import os
 
 STATIC_IMAGES_DIR = 'app/static/images/'
 
-def plot_last_runs(nRuns = 10, filename = "../log.h5"):
+def plot_last_runs(nRuns = 3, filename = "../log.h5"):
     with h5py.File(filename, mode='r') as h5f:
         runs = list(h5f.keys())
     runs = runs[-nRuns:][::-1]
