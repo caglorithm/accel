@@ -3,6 +3,8 @@ import digitalio
 from PIL import Image, ImageDraw, ImageFont
 import adafruit_ssd1306
 
+import config
+
 class OLED:
     def __init__(self):
         oled_reset = digitalio.DigitalInOut(board.D4)
@@ -10,7 +12,7 @@ class OLED:
         self.HEIGHT = 32 
 
         self.i2c = board.I2C()
-        self.oled = adafruit_ssd1306.SSD1306_I2C(self.WIDTH, self.HEIGHT, self.i2c, addr=0x3c, reset=oled_reset)
+        self.oled = adafruit_ssd1306.SSD1306_I2C(self.WIDTH, self.HEIGHT, self.i2c, addr=config.I2C_OLED_ADDR, reset=oled_reset)
         self.oled.fill(0)
         self.oled.show()
         self.image = Image.new('1', (self.oled.width, self.oled.height))
