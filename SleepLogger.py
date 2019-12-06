@@ -1,24 +1,26 @@
 import numpy as np
-import MMA
 import time
 import threading 
 import h5py
 import datetime
 
-from OLED import OLED
+import config
+
+import drivers.MMA as MMA
+from drivers.OLED import OLED
 
 class SleepLogger:
-    def __init__(self, redis_host='192.168.178.168', log_to_hdf = True, log_to_redis = True):
+    def __init__(self, log_to_hdf = True, log_to_redis = True):
         
         self.mma8452q = MMA.MMA8452Q()
-        self.activity_threshold = 12.5
+        self.activity_threshold = config.ACCELEROMETER_ACTIVITY_THRESHOLD
         
-        self.LOG_TO_REDIS = log_to_redis        
+        self.LOG_TO_REDIS = config.LOG_TO_REDIS     
         if log_to_redis:
             import redis
-            self.r = redis.Redis(host=redis_host, port=6379, db=0)
+            self.r = redis.Redis(host=config.REDIS_HOST, port=config.REDIS_PORT, db=0)
         
-        self.LOG_TO_HDF = log_to_hdf    
+        self.LOG_TO_HDF = config.LOG_TO_HDF 
         self.dataset_name = datetime.datetime.now().strftime("%Y-%m-%d-%HH-%MM-%SS")
         if log_to_hdf:
             self.H5_FILENAME = "/home/pi/accel/log.h5"

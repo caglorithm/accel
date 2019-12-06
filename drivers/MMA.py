@@ -1,9 +1,12 @@
 import smbus
 import time
+
+import config
+
 # Get I2C bus
 bus = smbus.SMBus(1)
 # I2C address of the device
-MMA8452Q_DEFAULT_ADDRESS = 0x1D
+MMA8452Q_DEFAULT_ADDRESS = config.I2C_ACCEL_ADDR
 # MMA8452Q Register Map
 MMA8452Q_REG_STATUS = 0x00 # Data status Register
 MMA8452Q_REG_OUT_X_MSB = 0x01 # Output Value X MSB
