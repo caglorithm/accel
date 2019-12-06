@@ -14,7 +14,7 @@ The hardware and the software is still in development. At this stage, the device
 
 You can find all of these parts fairly cheap on the internet. After soldering all the parts together, the "assembled" device is pretty compact and also a bit *shaggy*:
 
-![Assembled device](resources/img12.jpeg)
+![Assembled device](resources/img12.jpg)
 
 ## Data processing
 
