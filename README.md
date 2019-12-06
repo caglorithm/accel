@@ -8,7 +8,7 @@ This project is an experiment to see how far I can approximate the vigorous meth
 
 ## Current build
 
-The hardware and the software is still in development. At this stage, the device consists of these parts:
+The hardware and the software is still in very early development. At this stage, the device consists of these parts: a Raspberry Pi Zero W (any other Pi should work), a [MMA8452Q accelerometer chip](https://www.aliexpress.com/wholesale?SearchText=MMA8452Q) (~0.8€) with an I2C interface and a [tiny SSD1306 OLED screen](https://www.aliexpress.com/wholesale?SearchText=ssd1306) (~1.2€), also with an I2C interface. 
 
 ![Parts: Raspberry Pi Zero W, MMA8452Q (Accelerometer), SSD1306 (OLED)](resources/partlist.jpg)
 
@@ -17,6 +17,18 @@ You can find all of these parts fairly cheap on the internet. After soldering al
 ![Assembled device](resources/img12.jpg)
 
 ## Data processing
+
+#### Sampling data
+
+The data processing is done in multiple steps. The three-dimensional position data x,y,z is sampled from the accelerometer and is used to calculate the time derivative of the position we call dx/dt, giving us a velocity of the sensor. The data is sampled with an adaptive sampling rate: Whenever the velocity crosses a predefined threshold (activity is detected) the sampling rate doubles and we can record the movement with a high precision. The threshold was obtained by visually assessing the noise baseline and setting a threshold slightly above that.
+
+#### Simulating the activity model
+
+Whenever the measured movement crosses the threshold, a "spike" of activity is generated. This spike is fed into a very slow model that integrates those spikes in time (it "collects" them) which all ad up to a quantity called "activity". At the same time, the "activity" value always tries to decay back to zero, however slowly, within minutes to tens of minutes. Whenever the activity reaches a pre-defined value close to zero, the sleep stage is classified as "deep sleep".
+
+In deep sleep, the body's movement is reduced to a minimum, so we are trying to decide at every time step if the user hasn't been active for a long-enough time. This slow dynamical model lets us detect slow patterns in the movement activity over a long time scale and helps us decide whether the user hasn't moved for a long time and thus, could be in deep sleep. 
+
+The parameters for this model are chosen manually and haven't been fine-tuned yet. I tried to chose values that consistently have less than 50% of deep sleep and result roughly in two to three "main" deep sleep phases, often occurring in the beginning of the night and at the very end.
 
 ![](resources/signal_pipeline.png)
 
