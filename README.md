@@ -135,4 +135,5 @@ Here, it is evident that the dominant frequency (most prominent frequency in the
 
 We want to detect the deep sleep stage during night (referred to as HI DEEP and LO DEEP in the plot above) and trigger an action whenever it is detected.
 
-### 
+## License
+This project is licensed under the MIT License.
