@@ -20,11 +20,11 @@ You can find all of these parts fairly cheap on the internet. After soldering al
 
 ## Data processing
 
-#### Sampling data
+### Sampling data
 
 The data processing is done in multiple steps. The three-dimensional position data x,y,z is sampled from the accelerometer and is used to calculate the time derivative of the position we call dx/dt, giving us a velocity of the sensor. The data is sampled with an adaptive sampling rate: Whenever the velocity crosses a predefined threshold (activity is detected) the sampling rate doubles and we can record the movement with a high precision. The threshold was obtained by visually assessing the noise baseline and setting a threshold slightly above that.
 
-#### Simulating the activity model
+### Simulating the activity model
 
 Whenever the measured movement crosses the threshold, a "spike" of activity is generated. This spike is fed into a very slow model that integrates those spikes in time (it "collects" them) which all ad up to a quantity called "activity". At the same time, the "activity" value always tries to decay back to zero, however slowly, within minutes to tens of minutes. Whenever the activity reaches a pre-defined value close to zero, the sleep stage is classified as "deep sleep".
 
@@ -34,7 +34,9 @@ The parameters for this model are chosen manually and haven't been fine-tuned ye
 
 ![](resources/signal_pipeline.png)
 
-#### Generating the audio stimulus
+Whenever a very low pre-defined threshold is reached, the user is assumed to be in deep sleep. In this stage, the audio stimulus is triggered.
+
+### Generating the audio stimulus
 
 The slow oscillations in slow-wave sleep or deep sleep are typically around a frequency of 0.75Hz (this is a very broad generalisation. There is inter- and intra-subject variability of the oscillation frequency). As a crude approximation, we will use this frequency for audio input to the user. The human ear cannot perceive much below 20Hz and most headphones stop to work around that frequency for that reason. What we can do, however, is to mix two audible frequencies (base frequency) of, say, 40Hz and 40.75Hz. The small difference between the signals will cause a slow beating sound at the frequency of 0.75Hz. Assuming that neuronal activity in the auditory cortex is resonant to these frequencies, we hope that oscillatory energy input to the brain can entrain or amplify ongoing slow-wave activity.
 
@@ -42,25 +44,13 @@ In the plot below, a impractically low base frequency of 8Hz and a difference of
 
 ![](resources/audio_input.png)
 
-## Project roadmap
-* [✓] Receive raw movement data from accelerometer
-* [✓] Build dynamical model for activity level
-* [✓] Save data to local hdf file
-* [✓] Save data to remote redis server
-* [✓] Plot live movement data to OLED display
-* [✗] Design acoustic stimulus 
-* [✗] Build a hard case for the tracker
-* [✗] Assess deep-sleep detection accuracy using simultaneous sleep EEG
-* [✗] Trigger acoustic stimulus in deep sleep
-* [?] Use wireless EEG for sleep stage detection *somewhen in the far far future*
-
 ## Getting started
 
 First, I want to thank all the people who made all the modules and libraries that I could use to make this project possible. It is amazing what kind of amazing possibilities can lie just one pip install away. The drivers for the accelerometer and the OLED screen are snippets I found online and haven't yet documented where they are from (oops). Thanks also to their authors! 
 
 This project is based on some debian and a python packages. Please make sure that you have installed them. The following commands should work for a fresh install of Raspbian Buster Lite. Make sure you set up ssh correctly and connect to a network ([Google search](https://www.google.com/search?q=raspberry+pi+zero+w+headless+setup)).
 
-#### Enable I2C interface
+### Enable I2C interface
 This is the hardware interface that lets you communicate to connected chips. Enter 
 
 ```
@@ -68,7 +58,7 @@ sudo raspi-config
 ``` 
 
 and go to --> `Interfacing` --> `Enable I2C`
-#### Install python3 and other binaries
+### Install python3 and other binaries
 ```
 sudo apt update -y
 sudo apt install build-essential python3-dev python3-pip libatlas-base-dev libhdf5-dev i2c-tools git -y
@@ -81,7 +71,7 @@ sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.7 2
 sudo ln -s /usr/bin/pip3 /usr/bin/pip
 
 ```
-#### Install python packages
+### Install python packages
 
 ```
 pip install matplotlib numpy smbus h5py redis adafruit-circuitpython-ssd1306 adafruit-blinka RPI.GPIO flask
@@ -97,7 +87,7 @@ pip install Pillow
 
 You should be all set up at this point 👍.
 
-#### Determine I2C addresses of connected devices
+### Determine I2C addresses of connected devices
 
 In order to talk to the accelerometer and the OLED display, you need to find out what their addresses are. You can then put these into the `config.py` file in the root directory of this repository. The default values in there might work as well!
 
@@ -110,7 +100,7 @@ The output should look something like
 
 Here, my accelerometer has the address `0x1d` and the OLED `0x3c`. Good to know! Put these values into `config.py`. (Note: I don't know how you can know which is which at this stage).
 
-## Run the tracker
+### Run the tracker
 
 To execute the script, run
 `python accel.py`.
@@ -120,7 +110,17 @@ If you did everything I did, you should be able enable autostart of this script 
 ```
 echo "sudo -u pi /usr/bin/python /home/pi/accel/accel.py &" | sudo tee -a /etc/rc.local
 ```
-
+## Project roadmap
+* [✓] Receive raw movement data from accelerometer
+* [✓] Build dynamical model for activity level
+* [✓] Save data to local hdf file
+* [✓] Save data to remote redis server
+* [✓] Plot live movement data to OLED display
+* [✗] Design acoustic stimulus 
+* [✗] Build a hard case for the tracker
+* [✗] Assess deep-sleep detection accuracy using simultaneous sleep EEG
+* [✗] Trigger acoustic stimulus in deep sleep
+* [?] Use wireless EEG for sleep stage detection *somewhen in the far far future*
 
 ## Neuroscience background (wip)
 
