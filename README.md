@@ -38,7 +38,7 @@ The parameters for this model are chosen manually and haven't been fine-tuned ye
 
 The slow oscillations in slow-wave sleep or deep sleep are typically around a frequency of 0.75Hz (this is a very broad generalisation. There is inter- and intra-subject variability of the oscillation frequency). As a crude approximation, we will use this frequency for audio input to the user. The human ear cannot perceive much below 20Hz and most headphones stop to work around that frequency for that reason. What we can do, however, is to mix two audible frequencies (base frequency) of, say, 40Hz and 40.75Hz. The small difference between the signals will cause a slow beating sound at the frequency of 0.75Hz. Assuming that neuronal activity in the auditory cortex is resonant to these frequencies, we hope that oscillatory energy input to the brain can entrain or amplify ongoing slow-wave activity.
 
-In the plot below, a impractically low base frequency of 8Hz and a difference of 0.75 is chosen here for illustration purpose. You see a stimulus that lasts around 7 seconds. 
+In the plot below, a impractically low base frequency of 8Hz and a difference of 0.75 is chosen here for illustration purpose. You see a stimulus that lasts for around 7 seconds. 
 
 ![](resources/audio_input.png)
 
