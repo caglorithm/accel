@@ -10,6 +10,8 @@ This project is an experiment to see how far I can approximate the vigorous meth
 
 The hardware and the software is still in very early development. At this stage, the device consists of these parts: a Raspberry Pi Zero W (any other Pi should work), a [MMA8452Q accelerometer chip](https://www.aliexpress.com/wholesale?SearchText=MMA8452Q) (~0.8€) with an I2C interface and a [tiny SSD1306 OLED screen](https://www.aliexpress.com/wholesale?SearchText=ssd1306) (~1.2€), also with an I2C interface. 
 
+The acoustic stimulation is not yet implemented. More literature research is necessary 
+
 ![Parts: Raspberry Pi Zero W, MMA8452Q (Accelerometer), SSD1306 (OLED)](resources/partlist.jpg)
 
 You can find all of these parts fairly cheap on the internet. After soldering all the parts together, the "assembled" device is pretty compact and also a bit *shaggy*:
@@ -31,6 +33,14 @@ In deep sleep, the body's movement is reduced to a minimum, so we are trying to 
 The parameters for this model are chosen manually and haven't been fine-tuned yet. I tried to chose values that consistently have less than 50% of deep sleep and result roughly in two to three "main" deep sleep phases, often occurring in the beginning of the night and at the very end.
 
 ![](resources/signal_pipeline.png)
+
+#### Generating the audio stimulus
+
+The slow oscillations in slow-wave sleep or deep sleep are typically around a frequency of 0.75Hz (this is a very broad generalisation. There is inter- and intra-subject variability of the oscillation frequency). As a crude approximation, we will use this frequency for audio input to the user. The human ear cannot perceive much below 20Hz and most headphones stop to work around that frequency for that reason. What we can do, however, is to mix two audible frequencies (base frequency) of, say, 40Hz and 40.75Hz. The small difference between the signals will cause a slow beating sound at the frequency of 0.75Hz. Assuming that neuronal activity in the auditory cortex is resonant to these frequencies, we hope that oscillatory energy input to the brain can entrain or amplify ongoing slow-wave activity.
+
+In the plot below, a impractically low base frequency of 8Hz and a difference of 0.75 is chosen here for illustration purpose. You see a stimulus that lasts around 7 seconds. 
+
+![](resources/audio_input.png)
 
 ## Project roadmap
 * [✓] Receive raw movement data from accelerometer
