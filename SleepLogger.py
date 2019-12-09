@@ -49,9 +49,9 @@ class SleepLogger:
         then the activity it will exponentially decay with time constant `decay`
         """
         thresh = self.activity_threshold
-        decay = 2 * 60 * 1000.0
-        spike_strength = 0.07
-        decay_delay = 5 * 60 * 1000.0
+        decay = config.ACTIVITY_DECAY_CONSTANT
+        spike_strength = config.ACTIVITY_SPIKE_STRENGTH
+        decay_delay = config.ACTIVITY_DECAY_DELAY
 
         # if spike is larger than noise threshold
         if diff > thresh:
@@ -252,7 +252,14 @@ class SleepLogger:
                                                                                         return_delay=True)
             if self.OLED_PLOT:
                 #self.oled.draw_timeseries(diffs, text = self.dataset_name)
-                self.oled.draw_timeseries(diffs, text = "{0:.2f}".format(acts[-1]))
+                #threading.Thread(target=self.oled.draw_timeseries, args=(diffs, \
+                #                                    "{0:.2f}".format(acts[-1]))).start()
+                display_input = {}
+                display_input['timeseries'] = diffs
+                display_input['status'] = "{0:.2f}".format(acts[-1])
+                display_input['trigger'] = True if acts[-1] < 0.01 else False
+                threading.Thread(target=self.oled.draw_display, args=(display_input)).start()                
+                #self.oled.draw_timeseries(diffs, text = "{0:.2f}".format(acts[-1]))
             
             elapsed_time = ts_realtime_data[-1] - ts_realtime_data[0]
             current_delay = delays[-1]

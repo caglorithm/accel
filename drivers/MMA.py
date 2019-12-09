@@ -52,7 +52,7 @@ class MMA8452Q():
         self.mode_configuration()
         self.data_configuration()
     def write(self, REGISTER, SETTING):
-        print("Writing: {:08b}".format(SETTING))
+        #print("Writing: {:08b}".format(SETTING))
         bus.write_byte_data(MMA8452Q_DEFAULT_ADDRESS, REGISTER, SETTING)
     def mode_configuration(self, MODE=None):
         """Select the Control Register-1 configuration of the accelerometer from the given provided values"""
@@ -61,12 +61,12 @@ class MMA8452Q():
             MODE_CONFIG = (MMA8452Q_ODR_800 | MMA8452Q_MODE_NORMAL | MMA8452Q_MODE_ACTIVE)
         else:
             MODE_CONFIG = (MODE)
-        print("Writing: {:08b}".format(MODE_CONFIG))
+        #print("Writing: {:08b}".format(MODE_CONFIG))
         bus.write_byte_data(MMA8452Q_DEFAULT_ADDRESS, MMA8452Q_REG_CTRL_REG1, MODE_CONFIG)
     def data_configuration(self):
         """Select the Data Configuration Register configuration of the accelerometer from the given provided values"""
         DATA_CONFIG = (MMA8452Q_DATA_CFG_FS_2)
-        print("Data: {:08b}".format(DATA_CONFIG))
+        #print("Data: {:08b}".format(DATA_CONFIG))
         bus.write_byte_data(MMA8452Q_DEFAULT_ADDRESS, MMA8452Q_REG_XYZ_DATA_CFG, DATA_CONFIG)
     def read_accl(self):
         """Read data back from MMA8452Q_REG_STATUS(0x00), 7 bytes
