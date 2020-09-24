@@ -11,10 +11,24 @@ from drivers.OLED import OLED
 
 class SleepLogger:
     def __init__(self, log_to_hdf = True, log_to_redis = True):
+        """
+        Sleep logger with adaptive sampling and various logging methods.
+        Provides current sleep state data to other objects.
+        """
+        # Initiate sleep state variables
+        self.diff = None # current movement magnitude
+        self.diffs = None # past movement magnitudes
+        self.activity = None # current activity level
+        self.state = None # current sleep state
         
+        # Initiate control variables
+        self.run = True
+        
+        # Initiate accelerometer
         self.mma8452q = MMA.MMA8452Q()
         self.activity_threshold = config.ACCELEROMETER_ACTIVITY_THRESHOLD
         
+        # Initiate logging
         self.LOG_TO_REDIS = config.LOG_TO_REDIS     
         if log_to_redis:
             import redis
@@ -23,16 +37,15 @@ class SleepLogger:
         self.LOG_TO_HDF = config.LOG_TO_HDF 
         self.dataset_name = datetime.datetime.now().strftime("%Y-%m-%d-%HH-%MM-%SS")
         if log_to_hdf:
-            self.H5_FILENAME = "/home/pi/accel/log.h5"
+            self.H5_FILENAME = f"/home/pi/accel/{config.HDF_FILE}"
             self.H5_INIT = False
             
+        # Initiate Display
         self.OLED_TEXT = False
         self.OLED_PLOT = True
         if True:
             self.oled = OLED()
 
-                
-        
         print("Logger loaded")
         
     def getData(self, mma8452q):
@@ -49,9 +62,9 @@ class SleepLogger:
         then the activity it will exponentially decay with time constant `decay`
         """
         thresh = self.activity_threshold
-        decay = 2 * 60 * 1000.0
-        spike_strength = 0.07
-        decay_delay = 5 * 60 * 1000.0
+        decay = config.ACTIVITY_DECAY_CONSTANT
+        spike_strength = config.ACTIVITY_SPIKE_STRENGTH
+        decay_delay = config.ACTIVITY_DECAY_DELAY
 
         # if spike is larger than noise threshold
         if diff > thresh:
@@ -63,7 +76,7 @@ class SleepLogger:
             last_spike = now # set the time of this spike
 
         if now - last_spike > decay_delay:
-            # only when the last spike was longer ago than decay_time
+            # only when the last spike was longer ago than decay_delay
             # exponentially decay
             activity += - activity / decay * dt
 
@@ -76,10 +89,20 @@ class SleepLogger:
 
     def detect_state(self, activity):
         # if activity crosses a threshold, classify as "deep sleep" => state = 1
-        if activity < 0.01:
+        if activity < config.ACTIVITY_THRESHOLD_DEEP_SLEEP:
             return 1
         else:
             return 0
+    
+    def update_state_variables(self, diff=None, diffs=None, activity=None, state=None):
+        if diff is not None:
+            self.diff = diff # current movement magnitude
+        if diffs is not None:
+            self.diffs = difs # past movement magnitudes
+        if activity is not None:
+            self.activity = activity # current activity level
+        if state is not None:
+            self.state = state # current sleep state
 
     def adaptive_logger(self, sample_size = 128, verbose = False, log = False, \
                         init_delay = 2, init_activity = 0, init_acc = [0, 0, 0],
@@ -94,8 +117,8 @@ class SleepLogger:
 
         # sampling speed
         current_delay = init_delay
-        min_delay = 2.0
-        max_delay = 200.0 #maximum delay ms
+        min_delay = config.LOGGER_MIN_DELAY
+        max_delay = config.LOGGER_MAX_DELAY #maximum delay ms
 
         # prepare arrays for storing results
         raw_data = np.zeros((sample_size, 3)) # raw xyz data 
@@ -129,24 +152,22 @@ class SleepLogger:
 
             # increase sampling rate
             if diff > activity_threshold:
-                current_delay /= 10
+                current_delay /= config.DELAY_DIVIDE_BY
                 if current_delay < min_delay:
                     current_delay = min_delay
             else: # or decrease it
-                current_delay *= 1.2
+                current_delay *= config.DELAY_MULTIPLY_WITH
                 if current_delay > max_delay:
                     current_delay = max_delay
 
             # detect activity state 
             state = self.detect_state(activity)
-
-            if verbose:
-                #print("\r{:.4}          ".format(diff), end='\r')
-                print("\rDelay: {}, activity: {:.2}, diff: {:.4}, state: {}          ".format(int(current_delay), activity, diff, state), end='\r')
             
-            if self.OLED_TEXT and t - last_draw > 1000:
-                self.oled.draw_text("diff: {:.4}\na: {:.2}".format(diff, activity))
-                last_draw = t
+            self.update_state_variables(diff=diff, activity=activity, state=state)
+            
+            if verbose:
+                print("\rDelay: {}, activity: {:.2}, diff: {:.4}, state: {}          "\
+                      .format(int(current_delay), activity, diff, state), end='\r')
             
             # store data in time
             raw_data[i, 0] = acc[0]
@@ -163,7 +184,7 @@ class SleepLogger:
             last_t = t
             
             # finally sleep according to current sampling rate
-            time.sleep(current_delay / 1000.0)
+            time.sleep(current_delay / 1000.0) # seconds
 
         return ts_data, ts_realtime_data, raw_data, acts, diffs, delays, states, last_spike
 
@@ -196,23 +217,26 @@ class SleepLogger:
                         'activity' : activity, 'diff' : diff, 'delay' : delay, 'state' : state})
         return res     
             
-    def log_to_hdf(self, ts, ts_realtime, raw_data, acts, diffs, delays, states):
+    def log_to_hdf(self, ts, ts_realtime, raw_data, acts, diffs, delays, states, verbose=False):
         variables = (ts, ts_realtime, raw_data, acts, diffs, delays, states)
         var_strings = ["ts", "ts_realtime", "raw_data", "acts", "diffs", "delays", "states"]
         with h5py.File(self.H5_FILENAME, 'a') as h5f:
             if self.H5_INIT == False:
-                self.dataset_name = datetime.datetime.now().strftime("%Y-%m-%d-%HH-%MM-%SS")                
-                print("{}/{}: INIT".format(self.H5_FILENAME, self.dataset_name))
+                self.dataset_name = datetime.datetime.now().strftime("%Y-%m-%d-%HH-%MM-%SS")  
+                if verbose:
+                    print("{}/{}: INIT".format(self.H5_FILENAME, self.dataset_name))
                 grp = h5f.create_group(self.dataset_name)
                 
                 for i, var in enumerate(variables):
                     str_var = var_strings[i]
                     if str_var == "raw_data":
                         for k, str_var in enumerate(['x', 'y', 'z']):
-                            print("{}/{}: CREATE {}".format(self.H5_FILENAME, self.dataset_name, str_var))
+                            if verbose:
+                                print("{}/{}: CREATE {}".format(self.H5_FILENAME, self.dataset_name, str_var))
                             grp.create_dataset(str_var, data=var[:, k], compression="gzip", chunks=True, maxshape=(None,)) 
-                    else:                                 
-                        print("{}/{}: CREATE {}".format(self.H5_FILENAME, self.dataset_name, str_var))
+                    else:   
+                        if verbose:
+                            print("{}/{}: CREATE {}".format(self.H5_FILENAME, self.dataset_name, str_var))
                         grp.create_dataset(str_var, data=var, compression="gzip", chunks=True, maxshape=(None,)) 
                 
                 self.H5_INIT = True
@@ -228,13 +252,11 @@ class SleepLogger:
                         h5f[self.dataset_name][str_var].resize((h5f[self.dataset_name][str_var].shape[0] \
                                                                 + var.shape[0]), axis = 0)
                         h5f[self.dataset_name][str_var][-var.shape[0]:] = var                             
-                #h5f[self.dataset_name]["diffs"].resize((h5f[self.dataset_name]["diffs"].shape[0] + diffs.shape[0]), axis = 0)
-                #h5f[self.dataset_name]["diffs"][-diffs.shape[0]:] = diffs
-                print("{}/{}: APPEND ... {}".format(self.H5_FILENAME, self.dataset_name, \
-                                                      h5f[self.dataset_name]['diffs'].shape[0]))
-                #print(h5f[self.dataset_name]['diffs'].shape[0])       
+                if verbose:
+                    print("{}/{}: APPEND ... {}".format(self.H5_FILENAME, self.dataset_name, \
+                                                      h5f[self.dataset_name]['diffs'].shape[0]))      
                 
-    def chunkwise_logger(self, n_cycles = 10, t_size = 128, init_activity = 0):
+    def chunkwise_logger(self, n_cycles = 10, t_size = 128, init_activity = 0, verbose=True):
         # inialize variables for integration
         current_delay = 2.0
         acts = [0]
@@ -243,16 +265,28 @@ class SleepLogger:
 
         for i in range(n_cycles): 
             # one cycle of logging
-            ts_data, ts_realtime_data, raw_data, acts, diffs, delays, states, last_spike = self.adaptive_logger(t_size, \
+            if self.run:
+                ts_data, ts_realtime_data, raw_data, acts, diffs, delays, states, last_spike = self.adaptive_logger(t_size, \
                                                                                         init_activity = acts[-1], \
                                                                                         init_delay = current_delay, \
                                                                                         init_acc = raw_data[-1], \
                                                                                         last_spike = last_spike, \
-                                                                                        verbose=True, log=False,\
+                                                                                        verbose=verbose, log=False,\
                                                                                         return_delay=True)
+            else:
+                if verbose:
+                    print("Logging stopped")
+                
             if self.OLED_PLOT:
                 #self.oled.draw_timeseries(diffs, text = self.dataset_name)
-                self.oled.draw_timeseries(diffs, text = "{0:.2f}".format(acts[-1]))
+                #threading.Thread(target=self.oled.draw_timeseries, args=(diffs, \
+                #                                    "{0:.2f}".format(acts[-1]))).start()
+                display_input = {}
+                display_input['timeseries'] = diffs
+                display_input['status'] = "{0:.2f}".format(acts[-1])
+                display_input['trigger'] = True if acts[-1] < config.ACTIVITY_THRESHOLD_DEEP_SLEEP else False
+                threading.Thread(target=self.oled.draw_display, args=(display_input,)).start()                
+                #self.oled.draw_timeseries(diffs, text = "{0:.2f}".format(acts[-1]))
             
             elapsed_time = ts_realtime_data[-1] - ts_realtime_data[0]
             current_delay = delays[-1]
