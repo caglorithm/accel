@@ -44,6 +44,12 @@ In the plot below, a impractically low base frequency of 8Hz and a difference of
 
 ![](resources/audio_input.png)
 
+### A typical night
+
+Here is what a typical night looks like with the current integrator. The red spikes represent movements, the blue shaded area is the integrated level of activity. Periods when the activity drops close to zero are classified as periods of "deep sleep".
+
+![](resources/sleep.png)
+
 ## Getting started
 
 First, I want to thank all the people who made all the modules and libraries that I could use to make this project possible. It is amazing what kind of amazing possibilities can lie just one pip install away. The drivers for the accelerometer and the OLED screen are snippets I found online and haven't yet documented where they are from (oops). Thanks also to their authors! 
