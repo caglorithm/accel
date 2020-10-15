@@ -44,11 +44,13 @@ In the plot below, a impractically low base frequency of 8Hz and a difference of
 
 ![](resources/audio_input.png)
 
-### A typical night
+## Web interface
+
+The current web interface is built on Flask and Bootstrap and plotting is handled via chart.js. The sleep stage detection relies on some hard-coded thresholds still and hasn't been validated well with what other sleep trackers output. There is certainly a lot of room for improvement still. 
 
 Here is what a typical night looks like with the current integrator. The red spikes represent movements, the blue shaded area is the integrated level of activity. Periods when the activity drops close to zero are classified as periods of "deep sleep".
 
-![](resources/sleep.png)
+![](resources/sleep.jpg)
 
 ## Getting started
 
