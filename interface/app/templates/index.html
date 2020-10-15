@@ -1,12 +1,18 @@
 {% extends "base.html" %}
 
-{% block content %}
-    <h1>Hi, {{ user.username }}!</h1>
-    <p>Displaying last {{nRuns}} recordings ...<p><br>        
+{% block body %}
+<h1>Hi, {{ user.username }}!</h1>
+<p>Displaying last {{nRuns}} recordings ...
+<p><br>
     {% for run in runs %}
-    <div>
-    <div><p>Session name:<b> {{ run.name }} </b></p></div>
-    <div><img src="static/images/{{ run.name }}.png"></div>
+<div>
+    <!-- <div>
+        <p>Session name:<b> {{ run.name }} </b></p>
     </div>
-    {% endfor %}        
+    <div><img src="{{url_for('static', filename = 'images/')}}{{ run.name }}.png"></div> \-->
+    {% include 'chart.html' %}
+</div>
+
+</div>
+{% endfor %}
 {% endblock %}
