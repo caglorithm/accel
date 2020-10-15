@@ -11,3 +11,4 @@ adafruit-circuitpython-ssd1306
 adafruit-blinka
 RPI.GPIO
 Pillow
+dill
