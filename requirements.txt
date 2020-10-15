@@ -5,3 +5,10 @@ matplotlib
 h5py
 flask
 pandas
+smbus
+redis
+adafruit-circuitpython-ssd1306
+adafruit-blinka
+RPI.GPIO
+Pillow
+dill

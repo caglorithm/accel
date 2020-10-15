@@ -80,7 +80,7 @@ sudo ln -s /usr/bin/pip3 /usr/bin/pip
 ### Install python packages
 
 ```
-pip install matplotlib numpy smbus h5py redis adafruit-circuitpython-ssd1306 adafruit-blinka RPI.GPIO flask
+pip install -r requirements.txt
 ```
 This also installs the `h5py` package for logging data to the disk, `redis` for streaming the data to a redis server and `flask` for the web interface. These functions are optional but make sure to edit the `config.py` file accordingly.
 

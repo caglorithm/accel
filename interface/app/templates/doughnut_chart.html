@@ -1,0 +1,22 @@
+<canvas id="doughnut-chart{{ run.id }}" width="200" height="200"></canvas>
+<script>
+var doughnutChart{{ run.id }} = new Chart(document.getElementById("doughnut-chart{{ run.id }}"), {
+    type: 'doughnut',
+    data: {
+      labels: ["Light", "Deep"],
+      datasets: [
+        {
+          label: "Population (millions)",
+          backgroundColor: ["#e174ed", "#661e6e", "#8e5ea2","#3cba9f","#e8c3b9","#c45850"],
+          data: [{{ run.light_duration }}, {{ run.deep_duration }}]
+        }
+      ]
+    },
+    options: {
+      title: {
+        display: true,
+        text: 'Sleep stages'
+      }
+    }
+});
+</script>

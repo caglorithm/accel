@@ -1,6 +1,10 @@
-<h4>{{ run.name }}</h4>
+<h5 align="center">{{ run.name }}</h5>
+<p id="caption">Total sleep duration: {{ run.sleep_duration }} min (deep {{ run.deep_duration }} min / light {{ run.light_duration }} min).</p> 
 <!-- bar chart canvas element -->
-<canvas id="myChart{{ run.id }}" width="800" height="200"></canvas>
+<div id='charts'>
+  <canvas id="myChart{{ run.id }}" width="800" height="200"></canvas>
+</div>
+
 <!--  <p id="caption">The chart is displaying a simple line chart {{ run.name }}.</p> -->
 <script>
   // Global parameters:
@@ -14,7 +18,7 @@
   // gradient background
   var gradientFill = ctx.createLinearGradient(0, 0, 0, 290);
   gradientFill.addColorStop(0, "rgba(173, 53, 186, 1)");
-  gradientFill.addColorStop(1, "rgba(173, 53, 186, 0.3)");
+  gradientFill.addColorStop(1, "rgba(173, 53, 186, 0.2)");
 
 
   // define the chart data
@@ -65,7 +69,7 @@
       mode: 'vertical',
       scaleID: 'x-axis-0',
       value: date,
-      borderColor: 'black',
+      borderColor: '#d62d74',
       borderWidth: 2,
     }
   });
