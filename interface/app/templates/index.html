@@ -9,8 +9,16 @@
     <!-- <div>
         <p>Session name:<b> {{ run.name }} </b></p>
     </div>
-    <div><img src="{{url_for('static', filename = 'images/')}}{{ run.name }}.png"></div> \-->
-    {% include 'chart.html' %}
+    <div><img src="{{url_for('static', filename = 'images/')}}{{ run.name }}.png"></div> -->
+  
+        <div class="row">
+          <div class="col-10">
+            {% include 'chart.html' %}
+          </div>
+          <div class="col-sm-2" style="padding-right: 0 !important;;">
+            {% include 'doughnut_chart.html' %}
+          </div>
+        </div>
 </div>
 
 </div>

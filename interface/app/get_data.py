@@ -16,27 +16,36 @@ def get_runs(nruns=5, filename=H5_FILE):
     ts = []
     datas = []
     spikes = []
+
+    sleep_durations = []
+    deep_durations = []
+    light_durations = []
     for r in runs:
         t, data, diffs = get_data_from_run(runName=r, filename=filename)
-        # convert data to pandas dataframe for easy downsampling
-        df = data_to_pandas(t, data)
-        # downsample, 1T == 1minute
-        df = df.resample('1T').mean().bfill()
-        df.index = pd.to_datetime(df.index).strftime('%H:%M:%S')
 
-        df2 = get_spike_times(t, diffs)
-        
-        df2 = df2.resample('1T').max().bfill()
-        #df2.index = pd.to_datetime(df2.index).strftime('%H:%M:%S')
-        spike = df2[df2['data'].gt(17)].index.strftime('%H:%M:%S').tolist()
-        print(spike)
+        # convert data to pandas dataframe for easy downsampling
+        df = data_to_pandas(t, data, diffs)
+
+        # downsample, 1T == 1minute
+        df = df.resample('1T').agg({'data':'mean','diffs':'max'}).bfill()
+        df.index = pd.to_datetime(df.index)
+
+        # get activity spikes
+        diff_thrs = 15
+        spike = df[df['diffs'].gt(diff_thrs)].index.strftime('%H:%M:%S').tolist()
+
+        # get deep sleep duration
+        sleep_duration, deep_duration, light_duration = get_sleep_stage_durations(df)
+        deep_durations.append(deep_duration)
+        light_durations.append(light_duration)
+        sleep_durations.append(sleep_duration)
 
         #t, data = downsample_data(t, data)
-        ts.append(df.index)
+        ts.append(df.index.strftime('%H:%M:%S'))
         datas.append(df['data'])
         spikes.append(spike)
         
-    return ts, datas, spikes
+    return ts, datas, spikes, sleep_durations, deep_durations, light_durations
 
 
 def get_data_from_run(rInd=-1, runName=None, filename=H5_FILE):
@@ -62,15 +71,11 @@ def get_data_from_run(rInd=-1, runName=None, filename=H5_FILE):
     return times, acts, diffs
 
 
-def data_to_pandas(t, data):
-    df = pd.DataFrame({'t': t, 'data': data})
+def data_to_pandas(t, data, diffs):
+    df = pd.DataFrame({'t': t, 'data': data, 'diffs' : diffs})
     df = df.set_index('t')
     df['data'] = df['data'].fillna(0)
-    # .  # strftime('%H:%M:%S')
-    # print(pd.to_datetime(df.index).strftime('%H:%M:%S'))
-    # df.index = pd.to_datetime(df.index).strftime('%H:%M:%S')
-    # df.index = pd.to_datetime(df.index, format='%H:%M:%S')
-    #df.index = df.index.strftime('%H:%M:%S')
+    df['diffs'] = df['diffs'].fillna(0)
     return df
 
 
@@ -82,6 +87,13 @@ def get_spike_times(t, diffs, thr=17):
     print(df[df['data'].gt(thr)].index.strftime('%H:%M:%S'))
     return df[df['data'].gt(thr)].index.strftime('%H:%M:%S')
 
+def get_sleep_stage_durations(df):
+    activity_threshold = 0.05
+    deep_duration = len(df[df['data'].le(activity_threshold)].index)
+    sleep_duration = len(df)
+    light_duration = sleep_duration - deep_duration
+    print(sleep_duration, deep_duration)
+    return sleep_duration, deep_duration, light_duration
 
 def downsample_data(t, data, steps=100):
     t_resampled = signal.resample(t, steps)

@@ -28,14 +28,17 @@ def index():
     else:
         runNames = plot_last_runs(nRuns)
 
-    ts, datas, spikes = get_runs(nRuns)
+    ts, datas, spikes, sleep_durations, deep_durations, light_durations = get_runs(nRuns)
     runs = []
     for i, r in enumerate(runNames):
         runs.append({'id': i,
                      'name': r,
                      't': ts[i],
                      'data': datas[i],
-                     'spikes': spikes[i]})
+                     'spikes': spikes[i],
+                     'sleep_duration': sleep_durations[i],
+                     'deep_duration': deep_durations[i],
+                     'light_duration': light_durations[i]})
 
     legend = 'Monthly Data'
     labels = ["January", "February", "March",
