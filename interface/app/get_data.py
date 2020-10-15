@@ -8,6 +8,11 @@ import h5py
 
 H5_FILE = '../../log.h5'
 
+def get_run_names(nruns=5, filename=H5_FILE):
+    with h5py.File(filename, mode='r') as h5f:
+        runs = list(h5f.keys())
+    runs = runs[-nruns:][::-1]
+    return runs
 
 def get_runs(nruns=5, filename=H5_FILE):
     with h5py.File(filename, mode='r') as h5f:
