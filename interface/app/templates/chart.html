@@ -1,0 +1,88 @@
+<h4>{{ run.name }}</h4>
+<!-- bar chart canvas element -->
+<canvas id="myChart{{ run.id }}" width="800" height="200"></canvas>
+<!--  <p id="caption">The chart is displaying a simple line chart {{ run.name }}.</p> -->
+<script>
+  // Global parameters:
+  // do not resize the chart canvas when its container does (keep at 600x400px)
+  //Chart.defaults.global.responsive = false;
+
+  // get chart canvas
+  var ctx = document.getElementById("myChart{{ run.id }}").getContext("2d");
+
+
+  // gradient background
+  var gradientFill = ctx.createLinearGradient(0, 0, 0, 290);
+  gradientFill.addColorStop(0, "rgba(173, 53, 186, 1)");
+  gradientFill.addColorStop(1, "rgba(173, 53, 186, 0.3)");
+
+
+  // define the chart data
+  var chartData = {
+    labels: [{% for item in run.t %}
+  "{{item}}",
+    {% endfor %}],
+  datasets: [{
+    label: '{{ run.name }}',
+    fill: true,
+    lineTension: 0.5,
+    //backgroundColor: "rgba(75,192,192,0.4)",
+    //borderColor: "rgba(75,192,192,1)",
+    backgroundColor: gradientFill,
+    borderColor: '#AD35BA',
+    borderCapStyle: 'butt',
+    borderDash: [],
+    borderDashOffset: 0.0,
+    borderJoinStyle: 'miter',
+    //pointBorderColor: "rgba(75,192,192,1)",
+    //pointBackgroundColor: "#fff",
+    pointRadius: 0,
+    pointBorderWidth: 1,
+    borderWidth: 3,
+    pointBorderColor: "#181C30",
+    pointBackgroundColor: "rgba(173, 53, 186, 0.1)",
+    pointHoverRadius: 5,
+    pointHoverBackgroundColor: "rgba(173, 53, 186, 0.5)",
+    pointHoverBorderColor: "#181C30",
+    pointHoverBorderWidth: 2,
+    //pointRadius: 1,
+    pointHitRadius: 10,
+    data: [{% for item in run.data %}
+                      {{ item }},
+  {% endfor %}],
+    spanGaps: false
+        }]
+      }
+
+
+  // 'annotations' for activity spikes
+  var activity_t = [{% for item in run.spikes %}"{{ item }}",{% endfor %}];
+  //var activity_t = ['02:10:00', '03:10:00', '05:10:00'];
+  var annotations = activity_t.map(function (date, index) {
+    return {
+      type: 'line',
+      id: 'vline' + index,
+      mode: 'vertical',
+      scaleID: 'x-axis-0',
+      value: date,
+      borderColor: 'black',
+      borderWidth: 2,
+    }
+  });
+
+  // create the chart using the chart canvas
+  var myChart{{ run.id }} = new Chart(ctx, {
+    type: 'line',
+    data: chartData,
+    options: {
+      responsive: true,
+      annotation: {
+        drawTime: 'afterDatasetsDraw',
+        annotations: annotations
+      },
+      legend: {
+        display: false
+      }
+    }
+  });
+</script>

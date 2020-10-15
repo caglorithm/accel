@@ -1,0 +1,7 @@
+scipy
+numpy
+pyaudio
+matplotlib
+h5py
+flask
+pandas
