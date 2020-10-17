@@ -23,26 +23,8 @@ def get_runs(nruns=5, h5_filename=H5_FILE):
 
     data = {}
 
-    ts = []
-    datas = []
-    spikes = []
-
-    sleep_durations = []
-    deep_durations = []
-    light_durations = []
     for run_name in runs:
         data[run_name] = {}
-
-        # data_filename = os.path.join(PROCESSED_DATA_DIR, f"{r}.dill")
-        # if os.path.isfile(data_filename):
-        #     print(f"File {data_filename} exists...")
-        #     df = dill.load(open(data_filename, "br+"))
-        # else:
-        #     t, activity, diffs = get_data_from_run(runName=r, filename=filename)
-        #     df = process_data(t, activity, diffs)
-        #     print(f"Saving {data_filename}.")
-        #     dill.dump(df, open(data_filename, "bw+"))
-
         df = load_run_data(run_name, h5_filename)
 
         # get activity spikes
@@ -58,23 +40,18 @@ def get_runs(nruns=5, h5_filename=H5_FILE):
         # activity
         activity = df['data']
 
-        # # pack data
-        # deep_durations.append(deep_duration)
-        # light_durations.append(light_duration)
-        # sleep_durations.append(sleep_duration)        
-        # ts.append(df.index.strftime('%H:%M:%S'))
-        # datas.append(df['data'])
-        # spikes.append(spike_list)
+        # states
+        states = df['states']
         
         # pack data
         data[run_name]['deep_duration'] = deep_duration
-        data[run_name]['light_duration'] = deep_duration
+        data[run_name]['light_duration'] = light_duration
         data[run_name]['sleep_duration'] = sleep_duration
         data[run_name]['t'] = t
         data[run_name]['activity'] = activity
+        data[run_name]['states'] = states
         data[run_name]['spikes'] = spike_list
 
-    #return ts, datas, spikes, sleep_durations, deep_durations, light_durations
     return data
 
 

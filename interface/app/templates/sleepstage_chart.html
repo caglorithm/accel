@@ -1,8 +1,6 @@
-<h5 align="center">{{ run.name }}</h5>
-<p id="caption">Total sleep duration: {{ run.sleep_duration }} min (deep {{ run.deep_duration }} min / light {{ run.light_duration }} min).</p> 
 <!-- bar chart canvas element -->
 <div id='charts'>
-  <canvas id="myChart{{ run.id }}" width="800" height="200"></canvas>
+  <canvas id="sleepstage_chart{{ run.id }}" width="800" height="70"></canvas>
 </div>
 
 <!--  <p id="caption">The chart is displaying a simple line chart {{ run.name }}.</p> -->
@@ -12,13 +10,12 @@
   //Chart.defaults.global.responsive = false;
 
   // get chart canvas
-  var ctx = document.getElementById("myChart{{ run.id }}").getContext("2d");
-
+  var ctx = document.getElementById("sleepstage_chart{{ run.id }}").getContext("2d");
 
   // gradient background
   var gradientFill = ctx.createLinearGradient(0, 0, 0, 290);
-  gradientFill.addColorStop(0, "rgba(173, 53, 186, 1)");
-  gradientFill.addColorStop(1, "rgba(173, 53, 186, 0.2)");
+  gradientFill.addColorStop(0, "rgba(53, 133, 186, 1)");
+  gradientFill.addColorStop(1, "rgba(53, 133, 186, 0.2)");
 
 
   // define the chart data
@@ -44,14 +41,14 @@
     pointBorderWidth: 1,
     borderWidth: 3,
     pointBorderColor: "#181C30",
-    pointBackgroundColor: "rgba(173, 53, 186, 0.1)",
+    pointBackgroundColor: "rgba(53, 133, 186, 0.1)",
     pointHoverRadius: 5,
-    pointHoverBackgroundColor: "rgba(173, 53, 186, 0.5)",
+    pointHoverBackgroundColor: "rgba(53, 133, 186, 0.5)",
     pointHoverBorderColor: "#181C30",
     pointHoverBorderWidth: 2,
     //pointRadius: 1,
     pointHitRadius: 10,
-    data: [{% for item in run.activity %}
+    data: [{% for item in run.states %}
                       {{ item }},
   {% endfor %}],
     spanGaps: false
@@ -75,18 +72,21 @@
   });
 
   // create the chart using the chart canvas
-  var myChart{{ run.id }} = new Chart(ctx, {
+  var sleepstage_chart{{ run.id }} = new Chart(ctx, {
     type: 'line',
     data: chartData,
     options: {
       responsive: true,
-      annotation: {
-        drawTime: 'afterDatasetsDraw',
-        annotations: annotations
-      },
       legend: {
         display: false
-      }
+      },
+      scales: {
+            xAxes: [{
+                ticks: {
+                    display: false //this will remove only the label
+                }
+            }]
+        }
     }
   });
 </script>
