@@ -14,43 +14,58 @@ PROCESSED_DATA_DIR = '../../data/processed/'##os.path.join(DATA_DIR, "/processed
 def get_run_names(nruns=5, filename=H5_FILE):
     with h5py.File(filename, mode='r') as h5f:
         runs = list(h5f.keys())
-    runs = runs[-nruns:][::-1]
+    #runs = runs[-nruns:][::-1]
+
+    # reverse order so we start with the newest recording
+    runs = runs[::-1]
     return runs
 
 def get_runs(nruns=5, h5_filename=H5_FILE):
 
-    runs = get_run_names(nruns, h5_filename)
+    runs = get_run_names(h5_filename)
+    n_valid_runs = 0
 
     data = {}
 
     for run_name in runs:
-        data[run_name] = {}
-        df = load_run_data(run_name, h5_filename)
+        # only return nruns runs
+        if n_valid_runs >= nruns:
+            break
+        else:
+            df = load_run_data(run_name, h5_filename)
 
-        # get activity spikes
-        diff_thrs = 15
-        spike_list = df[df['diffs'].gt(diff_thrs)].index.strftime('%H:%M:%S').tolist()
+            # check if data is long enough
+            if not df.index[0] < df.index[-1] - datetime.timedelta(hours=1):
+                print(f"{run_name} is too short: {df.index[0]} until {df.index[-1]}")
+                continue
+            else:
+                n_valid_runs += 1
 
-        # get deep sleep duration
-        sleep_duration, deep_duration, light_duration = get_sleep_stage_durations(df)
+            data[run_name] = {}
+            # get activity spikes
+            diff_thrs = 15
+            spike_list = df[df['diffs'].gt(diff_thrs)].index.strftime('%H:%M:%S').tolist()
 
-        # time in HH:MM:SS
-        t = df.index.strftime('%H:%M:%S')
+            # get deep sleep duration
+            sleep_duration, deep_duration, light_duration = get_sleep_stage_durations(df)
 
-        # activity
-        activity = df['data']
+            # time in HH:MM:SS
+            t = df.index.strftime('%H:%M:%S')
 
-        # states
-        states = df['states']
-        
-        # pack data
-        data[run_name]['deep_duration'] = deep_duration
-        data[run_name]['light_duration'] = light_duration
-        data[run_name]['sleep_duration'] = sleep_duration
-        data[run_name]['t'] = t
-        data[run_name]['activity'] = activity
-        data[run_name]['states'] = states
-        data[run_name]['spikes'] = spike_list
+            # activity
+            activity = df['data']
+
+            # states
+            states = df['states']
+            
+            # pack data
+            data[run_name]['deep_duration'] = deep_duration
+            data[run_name]['light_duration'] = light_duration
+            data[run_name]['sleep_duration'] = sleep_duration
+            data[run_name]['t'] = t
+            data[run_name]['activity'] = activity
+            data[run_name]['states'] = states
+            data[run_name]['spikes'] = spike_list
 
     return data
 
