@@ -7,7 +7,7 @@ var doughnutChart{{ run.id }} = new Chart(document.getElementById("doughnut-char
       datasets: [
         {
           label: "Population (millions)",
-          backgroundColor: ["#e174ed", "#661e6e", "#8e5ea2","#3cba9f","#e8c3b9","#c45850"],
+          backgroundColor: ["#e174ed", "rgb(53, 133, 186)", "#8e5ea2","#3cba9f","#e8c3b9","#c45850"],
           data: [{{ run.light_duration }}, {{ run.deep_duration }}]
         }
       ]

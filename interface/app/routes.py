@@ -9,34 +9,19 @@ from app.get_data import get_runs, get_run_names
 @app.route('/index')
 def index():
     NRUNS_DEFAULT = 5
-    nruns = request.args.get('runs')
+    n_runs = request.args.get('runs')
     runName = request.args.get('run')
 
-    nruns = nruns or NRUNS_DEFAULT
+    n_runs = n_runs or NRUNS_DEFAULT
 
     user = {'username': 'caglorithm'}
 
 
-    data = get_runs(nruns)
+    data = get_runs(n_runs)
     runs = []
     for i, (key, value) in enumerate(data.items()):
         runs.append(value)
         runs[i].update({"id" : i})
         runs[i].update({"name" : key})
 
-        
-    #runNames = get_run_names(nruns)
-    #ts, datas, spikes, sleep_durations, deep_durations, light_durations = get_runs(nruns)
-    # runs = []
-    # for i, r in enumerate(runNames):
-    #     runs.append({'id': i,
-    #                  'name': r,
-    #                  't': ts[i],
-    #                  'data': datas[i],
-    #                  'spikes': spikes[i],
-    #                  'sleep_duration': sleep_durations[i],
-    #                  'deep_duration': deep_durations[i],
-    #                  'light_duration': light_durations[i]})
-
-
-    return render_template('index.html', nRuns=nruns, runs=runs, user=user)
+    return render_template('index.html', n_runs=n_runs, runs=runs, user=user)

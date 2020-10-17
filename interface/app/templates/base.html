@@ -43,15 +43,12 @@
 <body>
   <div class="text-center" style="margin-bottom:0; margin-top:2em;">
     <h1>Hi, {{ user.username }}!</h1>
-    <p>Displaying last {{nRuns}} recordings ...</p> 
+    <p>Displaying last {{n_runs}} recordings ...</p> 
   </div>
-
-
 
   {% block body %}
 
   {% endblock %}
-
 
   <script src="{{url_for('static', filename='js/bootstrap.min.js')}}"></script>
   <script src="{{url_for('static', filename = 'js/dark-mode-switch.min.js')}}"></script>  
