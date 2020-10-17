@@ -1,18 +1,36 @@
 import time
 import numpy as np
 import pyaudio
-import matplotlib.pyplot as plt
 import threading
-
+import logging
 
 class AudioStimulus():
-    def __init__(self, base_fr=40.0, stim_fr=0.75, stim_len=6.68, bitrate=48000):
+    def __init__(self, base_fr=40.0, stim_fr=0.8, stim_len=5, bitrate=48000):
         self.PyAudio = pyaudio.PyAudio
         self.bitrate = bitrate
         self.isActive = False
         self.base_fr = base_fr
         self.stim_fr = stim_fr
         self.stim_len = stim_len  # second
+
+        self.SLEEP_AFTER_LOOP = 0.0 # in seconds
+
+        logging.info("Initializing audio interface ...")
+        self.p = self.PyAudio()
+        self.stream = self.p.open(format=pyaudio.paFloat32,
+                        channels=1,
+                        rate=int(self.bitrate),
+                        output=True)
+                        
+        logging.info("Generating waveform ...")
+        self.waveform = self.generate_sin_waveform()
+        logging.info("AudioStimulus initialized.")
+
+    def terminate_audio_stream(self):
+        self.stream.stop_stream()
+        self.stream.close()
+        self.p.terminate()
+        logging.info("Audio stream terminated.")
 
     def generate_sin_waveform(self,):
         sound_len = self.stim_len  # second
@@ -31,27 +49,20 @@ class AudioStimulus():
         return waveform
 
     def play_audio(self, waveform):
-        p = self.PyAudio()
-        stream = p.open(format=pyaudio.paFloat32,
-                        channels=1,
-                        rate=int(self.bitrate),
-                        output=True)
         # start loop that generates audio
         while self.isActive:
-            print("Play stimulus.")
-            stream.write(waveform, num_frames=len(waveform))
-            time.sleep(0.5)
+            logging.info("Play stimulus.")
+            self.stream.write(waveform, num_frames=len(waveform))
+            time.sleep(self.SLEEP_AFTER_LOOP)
+
         self.isActive = False
-        stream.stop_stream()
-        stream.close()
-        p.terminate()
-        print("Stimulus stopped.")
+        logging.info("Stimulus stopped.")
 
     def start_stimulus(self):
         self.isActive = True
         # kick off a thread that loops
         x = threading.Thread(target=self.play_audio,
-                             args=(self.generate_sin_waveform(),))
+                             args=(self.waveform,))
         x.start()
 
     def play_waveform(self, waveform):
@@ -63,8 +74,4 @@ class AudioStimulus():
 
     def stop_stimulus(self):
         self.isActive = False
-        print("Stop stimulus ...")
-
-    def plot_stimulus(self):
-        plt.plot(self.generate_sin_waveform()[:], c='k')
-        plt.show()
+        logging.info("Stopping stimulus ...")

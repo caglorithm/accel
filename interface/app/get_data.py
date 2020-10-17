@@ -17,10 +17,12 @@ def get_run_names(nruns=5, filename=H5_FILE):
     runs = runs[-nruns:][::-1]
     return runs
 
-def get_runs(nruns=5, filename=H5_FILE):
-    with h5py.File(filename, mode='r') as h5f:
-        runs = list(h5f.keys())
-    runs = runs[-nruns:][::-1]
+def get_runs(nruns=5, h5_filename=H5_FILE):
+
+    runs = get_run_names(nruns, h5_filename)
+
+    data = {}
+
     ts = []
     datas = []
     spikes = []
@@ -28,39 +30,65 @@ def get_runs(nruns=5, filename=H5_FILE):
     sleep_durations = []
     deep_durations = []
     light_durations = []
-    for r in runs:
-        data_filename = os.path.join(PROCESSED_DATA_DIR, f"{r}.dill")
-        if os.path.isfile(data_filename):
-            print(f"File {data_filename} exists...")
-            df = dill.load(open(data_filename, "br+"))
-        else:
-            t, data, diffs = get_data_from_run(runName=r, filename=filename)
-            df = process_data(t, data, diffs)
-            print(f"Saving {data_filename}.")
-            dill.dump(df, open(data_filename, "bw+"))
+    for run_name in runs:
+        data[run_name] = {}
+
+        # data_filename = os.path.join(PROCESSED_DATA_DIR, f"{r}.dill")
+        # if os.path.isfile(data_filename):
+        #     print(f"File {data_filename} exists...")
+        #     df = dill.load(open(data_filename, "br+"))
+        # else:
+        #     t, activity, diffs = get_data_from_run(runName=r, filename=filename)
+        #     df = process_data(t, activity, diffs)
+        #     print(f"Saving {data_filename}.")
+        #     dill.dump(df, open(data_filename, "bw+"))
+
+        df = load_run_data(run_name, h5_filename)
 
         # get activity spikes
         diff_thrs = 15
-        spike = df[df['diffs'].gt(diff_thrs)].index.strftime('%H:%M:%S').tolist()
+        spike_list = df[df['diffs'].gt(diff_thrs)].index.strftime('%H:%M:%S').tolist()
 
         # get deep sleep duration
         sleep_duration, deep_duration, light_duration = get_sleep_stage_durations(df)
-        deep_durations.append(deep_duration)
-        light_durations.append(light_duration)
-        sleep_durations.append(sleep_duration)
 
-        #t, data = downsample_data(t, data)
-        ts.append(df.index.strftime('%H:%M:%S'))
-        datas.append(df['data'])
-        spikes.append(spike)
+        # time in HH:MM:SS
+        t = df.index.strftime('%H:%M:%S')
+
+        # activity
+        activity = df['data']
+
+        # # pack data
+        # deep_durations.append(deep_duration)
+        # light_durations.append(light_duration)
+        # sleep_durations.append(sleep_duration)        
+        # ts.append(df.index.strftime('%H:%M:%S'))
+        # datas.append(df['data'])
+        # spikes.append(spike_list)
         
-    return ts, datas, spikes, sleep_durations, deep_durations, light_durations
+        # pack data
+        data[run_name]['deep_duration'] = deep_duration
+        data[run_name]['light_duration'] = deep_duration
+        data[run_name]['sleep_duration'] = sleep_duration
+        data[run_name]['t'] = t
+        data[run_name]['activity'] = activity
+        data[run_name]['spikes'] = spike_list
+
+    #return ts, datas, spikes, sleep_durations, deep_durations, light_durations
+    return data
 
 
-def process_data(t, data, diffs):
-    df = data_to_pandas(t, data, diffs)
+def data_to_pandas(t, data, diffs, states):
+    df = pd.DataFrame({'t': t, 'data': data, 'diffs' : diffs, 'states' : states})
+    df = df.set_index('t')
+    df['data'] = df['data'].fillna(0)
+    df['diffs'] = df['diffs'].fillna(0)
+    return df
+
+def process_data(t, data, diffs, states):
+    df = data_to_pandas(t, data, diffs, states)
     # downsample, 1T == 1minute
-    df = df.resample('1T').agg({'data':'mean','diffs':'max'}).bfill()
+    df = df.resample('1T').agg({'data':'mean', 'diffs':'max', 'states':'last'}).bfill()
     df.index = pd.to_datetime(df.index)
     return df
 
@@ -79,21 +107,29 @@ def get_data_from_run(rInd=-1, runName=None, filename=H5_FILE):
         ts = h5f[runName]['ts_realtime'][()]
         diffs = h5f[runName]['diffs'][()]
         acts = h5f[runName]['acts'][()]
+        states = h5f[runName]['states'][()]
     
     # convert loaded data into datetime
     times = []
     for i, milli in enumerate(ts):
         times.append(datetime.datetime.fromtimestamp(milli/1000.0))
     times = np.array(times)
-    return times, acts, diffs
-
-
-def data_to_pandas(t, data, diffs):
-    df = pd.DataFrame({'t': t, 'data': data, 'diffs' : diffs})
-    df = df.set_index('t')
-    df['data'] = df['data'].fillna(0)
-    df['diffs'] = df['diffs'].fillna(0)
+    df = process_data(times, acts, diffs, states)
     return df
+
+def load_run_data(run_name, h5_filename):
+    # check if preprocessed data is already available
+    data_filename = os.path.join(PROCESSED_DATA_DIR, f"{run_name}.dill")
+    if os.path.isfile(data_filename):
+        print(f"File {data_filename} exists...")
+        df = dill.load(open(data_filename, "br+"))
+    else:
+        df = get_data_from_run(runName=run_name, filename=h5_filename)
+        #df = process_data(t, activity, diffs)
+        print(f"Saving {data_filename}.")
+        dill.dump(df, open(data_filename, "bw+"))    
+    return df
+
 
 
 def get_spike_times(t, diffs, thr=17):

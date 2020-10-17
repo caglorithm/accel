@@ -1,7 +1,7 @@
 from flask import render_template, request
 from app import app
 
-from app.dataplotter import plot_last_runs, plot_recording
+#from app.dataplotter import plot_last_runs, plot_recording
 from app.get_data import get_runs, get_run_names
 
 
@@ -16,24 +16,27 @@ def index():
 
     user = {'username': 'caglorithm'}
 
-    # if runName is not None:
-    #     plot_recording(runName=runName)
-    #     runNames = [runName]
-    # else:
-    #     runNames = plot_last_runs(nRuns)
 
-    runNames = get_run_names(nruns)
-    ts, datas, spikes, sleep_durations, deep_durations, light_durations = get_runs(nruns)
+    data = get_runs(nruns)
     runs = []
-    for i, r in enumerate(runNames):
-        runs.append({'id': i,
-                     'name': r,
-                     't': ts[i],
-                     'data': datas[i],
-                     'spikes': spikes[i],
-                     'sleep_duration': sleep_durations[i],
-                     'deep_duration': deep_durations[i],
-                     'light_duration': light_durations[i]})
+    for i, (key, value) in enumerate(data.items()):
+        runs.append(value)
+        runs[i].update({"id" : i})
+        runs[i].update({"name" : key})
+
+        
+    #runNames = get_run_names(nruns)
+    #ts, datas, spikes, sleep_durations, deep_durations, light_durations = get_runs(nruns)
+    # runs = []
+    # for i, r in enumerate(runNames):
+    #     runs.append({'id': i,
+    #                  'name': r,
+    #                  't': ts[i],
+    #                  'data': datas[i],
+    #                  'spikes': spikes[i],
+    #                  'sleep_duration': sleep_durations[i],
+    #                  'deep_duration': deep_durations[i],
+    #                  'light_duration': light_durations[i]})
 
 
     return render_template('index.html', nRuns=nruns, runs=runs, user=user)
