@@ -15,7 +15,7 @@
   <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
       <ul class="navbar-nav mr-auto">
           <li class="nav-item active">
-              <a class="nav-link" href="#">Home</a>
+              <a class="nav-link" href="/">Home</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" target="_blank" href="https://github.com/caglorithm/accel">GitHub</a>
@@ -23,7 +23,7 @@
       </ul>
   </div>
   <div class="mx-auto order-0">
-      <a class="navbar-brand mx-auto" href="#">accel💤🔊🧠〰️</a>
+      <a class="navbar-brand mx-auto" href="/">accel💤🔊🧠〰️</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".dual-collapse2">
           <span class="navbar-toggler-icon"></span>
       </button>
@@ -41,11 +41,13 @@
 </nav>
 
 <body>
-  <div class="text-center" style="margin-bottom:0; margin-top:2em;">
-    <h1>Hi, {{ user.username }}!</h1>
-    <p>Displaying last {{n_runs}} recordings ...</p> 
-  </div>
 
+  <div class="text-center" style="padding-top: 2em;">
+    <div class="btn-group pagination-centered" role="group" aria-label="Basic example">
+      <a href="/start" class="btn btn-success" role="button">Start tracker</a>
+      <a href="/stop" class="btn btn-danger" role="button">Stop tracker</a>
+    </div>
+  </div>
   {% block body %}
 
   {% endblock %}

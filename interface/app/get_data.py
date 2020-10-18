@@ -24,7 +24,7 @@ def get_runs(nruns=5, h5_filename=H5_FILE):
 
     runs = get_run_names(h5_filename)
     n_valid_runs = 0
-
+    nruns = int(nruns)
     data = {}
 
     for run_name in runs:
