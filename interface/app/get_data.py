@@ -20,14 +20,19 @@ def get_run_names(nruns=5, filename=H5_FILE):
     runs = runs[::-1]
     return runs
 
-def get_runs(nruns=5, h5_filename=H5_FILE):
+def get_runs(nruns=5, h5_filename=H5_FILE, run_name = None):
 
-    runs = get_run_names(h5_filename)
+    if run_name is None:
+        runs = get_run_names(h5_filename)
+    else:
+        runs = [run_name]
+        
     n_valid_runs = 0
     nruns = int(nruns)
     data = {}
 
     for run_name in runs:
+        print("Loading run {}".format(run_name))
         # only return nruns runs
         if n_valid_runs >= nruns:
             break

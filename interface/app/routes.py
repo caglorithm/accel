@@ -27,14 +27,14 @@ sl = None
 def index():
     NRUNS_DEFAULT = 5
     n_runs = request.args.get('runs')
-    runName = request.args.get('run')
+    run_name = request.args.get('run')
 
     n_runs = n_runs or NRUNS_DEFAULT
 
     user = {'username': 'caglorithm'}
 
 
-    data = get_runs(n_runs)
+    data = get_runs(n_runs, run_name = run_name)
     runs = []
     for i, (key, value) in enumerate(data.items()):
         runs.append(value)
