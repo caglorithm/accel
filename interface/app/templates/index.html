@@ -1,26 +1,29 @@
 {% extends "base.html" %}
 
 {% block body %}
-<p><br>
-    {% for run in runs %}
-<div>
-        <div class="row">
-          <div class="col-10" style="margin-top: 2em;">
-            <h5 align="center">{{ run.name }}</h5>
-            <p id="caption" align="center">
-              Total sleep duration: {{ run.sleep_duration }} min ({{ '%0.1f'| format(run.sleep_duration / 60|float) }} h) <br>
-              Deep: {{ run.deep_duration }} min ({{ '%0.1f'| format(run.deep_duration / 60|float) }} h) / 
-              Light: {{ run.light_duration }} min ({{ '%0.1f'| format(run.light_duration / 60|float) }} h)
-            </p> 
-            {% include 'activity_chart.html' %}
-            {% include 'sleepstage_chart.html' %}
-          </div>
-          <div class="col-sm-2" style="padding-right: 0 !important; padding-top: 5em;">
-            {% include 'doughnut_chart.html' %}
-          </div>
-        </div>
+<div class="text-center" style="margin-bottom:0; margin-top:2em;">
+  <h1>Hi, {{ user.username }}!</h1>
+  <p>Displaying last {{n_runs}} recordings ...</p> 
 </div>
 
-</div>
+<br>
+  {% for run in runs %}
+  <div>
+          <div class="row">
+            <div class="col-10" style="margin-top: 2em;">
+              <h5 align="center">{{ run.name }}</h5>
+              <p id="caption" align="center">
+                Total sleep duration: {{ run.sleep_duration }} min ({{ '%0.1f'| format(run.sleep_duration / 60|float) }} h) <br>
+                Deep: {{ run.deep_duration }} min ({{ '%0.1f'| format(run.deep_duration / 60|float) }} h) / 
+                Light: {{ run.light_duration }} min ({{ '%0.1f'| format(run.light_duration / 60|float) }} h)
+              </p> 
+              {% include 'activity_chart.html' %}
+              {% include 'sleepstage_chart.html' %}
+            </div>
+            <div class="col-sm-2" style="padding-right: 0 !important; padding-top: 5em;">
+              {% include 'doughnut_chart.html' %}
+            </div>
+          </div>
+    </div>
 {% endfor %}
 {% endblock %}

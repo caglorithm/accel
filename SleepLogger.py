@@ -12,7 +12,7 @@ from drivers.OLED import OLED
 from Stimulus import AudioStimulus
 
 class SleepLogger:
-    def __init__(self, log_to_hdf = True, stimulus = config.STIMULUS_ACTIVE):
+    def __init__(self):
         """
         Sleep logger with adaptive sampling and various logging methods.
         Provides current sleep state data to other objects.
@@ -24,7 +24,7 @@ class SleepLogger:
         self.state = None # current sleep state
         
         # Initiate control variables
-        self.run = True
+        self._run = False
         
         # Initiate accelerometer
         self.mma8452q = MMA.MMA8452Q()
@@ -32,31 +32,31 @@ class SleepLogger:
         
         # Initiate logging
         self.dataset_name = datetime.datetime.now().strftime("%Y-%m-%d-%HH-%MM-%SS")
+        logging.info(f"Recording name: {self.dataset_name}")
 
-        self.LOG_TO_REDIS = config.LOG_TO_REDIS     
-        if self.LOG_TO_REDIS:
+        config.LOG_TO_REDIS = config.LOG_TO_REDIS     
+        if config.LOG_TO_REDIS:
             import redis
             self.r = redis.Redis(host=config.REDIS_HOST, port=config.REDIS_PORT, db=0)
             logging.info(f"Logging to Redis server {config.REDIS_HOST}:{config.REDIS_PORT}")
         
-        self.LOG_TO_HDF = config.LOG_TO_HDF 
-        if self.LOG_TO_HDF:
+        config.LOG_TO_HDF = config.LOG_TO_HDF 
+        if config.LOG_TO_HDF :
             self.H5_FILENAME = f"/home/pi/accel/{config.HDF_FILE}"
             self.H5_INIT = False
             logging.info("Logging to HDF file: {}.".format(self.H5_FILENAME))
             
         # Initiate Display
-        self.OLED_TEXT = False
-        self.OLED_PLOT = True
-        if True:
+        if config.OLED_DISPLAY:
             self.oled = OLED()
+            logging.info(f"OLED initialized.")
 
         # Initiate Stimulus module
-        if stimulus:
+        if config.STIMULUS_ACTIVE:
             self.audiostim = AudioStimulus()
             logging.info("Stimulus module loaded")
 
-        logging.info("Logger loaded")
+        logging.info("Sleep tracker initialized.")
         
     def get_accel_data(self, mma8452q):
         acc = mma8452q.read_accl()
@@ -193,8 +193,9 @@ class SleepLogger:
             state = self.detect_state(activity)
             
             self.update_state_variables(diff=diff, activity=activity, state=state)
-
-            self.trigger_stimulus()
+            
+            if config.STIMULUS_ACTIVE:
+                self.trigger_stimulus()
 
             if config.VERBOSE_OUTPUT:
                 print("\rDelay: {}, activity: {:.2}, diff: {:.4}, state: {}          "\
@@ -223,15 +224,13 @@ class SleepLogger:
         """
         Data logger. Logs data into a database or on hdf5 file storage.
         """
-        if self.LOG_TO_REDIS:
+        if config.LOG_TO_REDIS:
             threading.Thread(target=self.log_to_redis, \
                              args=(self.r, ts_data, ts_realtime_data, raw_data, acts, diffs, delays, states)).start()
-            #self.log_to_redis(self.r, ts_data, ts_realtime_data, raw_data, acts, diffs, delays, states)
         
-        if self.LOG_TO_HDF:
+        if config.LOG_TO_HDF:
             threading.Thread(target=self.log_to_hdf, \
                              args=(ts_data, ts_realtime_data, raw_data, acts, diffs, delays, states)).start()            
-            #self.log_to_hdf(ts_data, ts_realtime_data, raw_data, acts, diffs, delays, states)
 
     def log_to_redis(self, r, ts, ts_realtime, raw_data, acts, diffs, delays, states):
         for i, t in enumerate(ts):
@@ -287,16 +286,16 @@ class SleepLogger:
                     logging.info("{}/{}: APPEND ... {}".format(self.H5_FILENAME, self.dataset_name, \
                                                       h5f[self.dataset_name]['diffs'].shape[0]))      
                 
-    def chunkwise_logger(self, n_cycles = 10, t_size = 128, init_activity = 0.0, verbose=True):
+    def chunkwise_logger(self, n_cycles = 10, t_size = 128):
         # inialize variables for integration
         current_delay = 2.0
         acts = [0.0]
         raw_data = [0.0, 0.0, 0.0]
         last_spike = -1e10
-
         for i in range(n_cycles): 
+            #print(i, "self._run: ", self._run)
             # one cycle of logging
-            if self.run:
+            if self._run:
                 # run the next chunk with the last values as initial conditions
                 ts_data, ts_realtime_data, raw_data, acts, diffs, delays, states, last_spike = self.adaptive_logger(t_size, \
                                                                                         init_activity = acts[-1], \
@@ -304,23 +303,37 @@ class SleepLogger:
                                                                                         init_acc = raw_data[-1], \
                                                                                         last_spike = last_spike, \
                                                                                         return_delay=True)
+
+                if config.OLED_DISPLAY:
+                    # stitch together the object to send to the OLED interfacer thread
+                    display_input = {}
+                    display_input['timeseries'] = diffs
+                    display_input['status'] = "{0:.2f}".format(acts[-1])
+                    display_input['trigger'] = True if int(states[-1]) == config.SLEEP_STATE_DEEP else False
+                    threading.Thread(target=self.oled.draw_display, args=(display_input,)).start()                
+                    #self.oled.draw_timeseries(diffs, text = "{0:.2f}".format(acts[-1]))
+                
+                elapsed_time = ts_realtime_data[-1] - ts_realtime_data[0]
+                current_delay = delays[-1]
+
+                if config.LOGGING:
+                    # log all data
+                    threading.Thread(target=self.log_data, args=(ts_data, ts_realtime_data, raw_data, acts, diffs, delays, states)).start()                                                                                        
             else:
                 if config.VERBOSE_OUTPUT:
-                    logging.info("Logging stopped")
-                
-            if self.OLED_PLOT:
-                # stitch together the object to send to the OLED interfacer thread
-                display_input = {}
-                display_input['timeseries'] = diffs
-                display_input['status'] = "{0:.2f}".format(acts[-1])
-                display_input['trigger'] = True if int(states[-1]) == config.SLEEP_STATE_DEEP else False
-                threading.Thread(target=self.oled.draw_display, args=(display_input,)).start()                
-                #self.oled.draw_timeseries(diffs, text = "{0:.2f}".format(acts[-1]))
-            
-            elapsed_time = ts_realtime_data[-1] - ts_realtime_data[0]
-            current_delay = delays[-1]
+                    logging.info(f"Sleep tracking stopped. Elapsed time: {elapsed_time}")
+                break                
 
-            # throw all data into redis
-            threading.Thread(target=self.log_data, args=(ts_data, ts_realtime_data, raw_data, acts, diffs, delays, states)).start()
+    def start(self):
+        self._run = True
+        # kick off a thread that loops
+        self.thread = threading.Thread(target=self.chunkwise_logger,
+                             args=(999999999999, 512))
+        self.thread.start()
+        logging.info("Sleep tracking started.")
+        return self.thread
 
-        return ts_data, ts_realtime_data, raw_data, acts, diffs, delays, states
+    def stop(self):
+        self._run = False
+        #self.thread.join()
+        logging.info("Sleep tracking stopped.")
