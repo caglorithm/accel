@@ -96,12 +96,16 @@ class OLED:
             self.draw_image()
 
     def draw_display(self, content):
-        timeseries = content['timeseries']
-        status = content['status']
-        trigger = content['trigger']
+        if "timeseries" in content and "status" in content:
+            timeseries = content['timeseries']
+            status = content['status']
+            self.draw_timeseries(timeseries, text=status, clear_display = True, redraw = False)
+
+        if "trigger" in content:
+            trigger = content['trigger']
+            if trigger:
+                self.draw_text("STIMULUS", font='medium')
         
-        #self.draw_frame(1)
-        self.draw_timeseries(timeseries, text=status, clear_display = True, redraw = False)
-        if trigger:
-            self.draw_text("STIMULUS", font='medium')
+        if "text" in content:
+            self.draw_text(content["text"], font='medium', clear_display=True, draw_frame=True)
         self.draw_image()

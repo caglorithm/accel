@@ -337,3 +337,4 @@ class SleepLogger:
         self._run = False
         #self.thread.join()
         logging.info("Sleep tracking stopped.")
+        threading.Thread(target=self.oled.draw_display, args=(dict(text="Stopping"),)).start()      
