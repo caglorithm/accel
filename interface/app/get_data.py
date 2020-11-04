@@ -11,7 +11,7 @@ H5_FILE = '../../log.h5'
 DATA_DIR = '../../data/'#os.path.join(STATIC_IMAGES_DIR, "{}.png".format(runName))
 PROCESSED_DATA_DIR = '../../data/processed/'##os.path.join(DATA_DIR, "/processed/")
 
-def get_run_names(nruns=5, filename=H5_FILE):
+def get_run_names(nruns=1, filename=H5_FILE):
     with h5py.File(filename, mode='r') as h5f:
         runs = list(h5f.keys())
     #runs = runs[-nruns:][::-1]

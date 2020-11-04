@@ -59,6 +59,8 @@ def stop():
     if sl is not None:
         sl.stop()
         sl = None
+        # process newest dataset
+        _ = get_runs(nruns=1)
         return render_template('tracker.html', status = "stopped")
     else:
         return render_template('tracker.html', status = "is not running")

@@ -322,6 +322,7 @@ class SleepLogger:
             else:
                 if config.VERBOSE_OUTPUT:
                     logging.info(f"Sleep tracking stopped. Elapsed time: {elapsed_time}")
+                    self.oled.print("Good Morning", draw_frame=1, font='large')
                 break                
 
     def start(self):
@@ -337,4 +338,5 @@ class SleepLogger:
         self._run = False
         #self.thread.join()
         logging.info("Sleep tracking stopped.")
-        threading.Thread(target=self.oled.draw_display, args=(dict(text="Stopping"),)).start()      
+        #threading.Thread(target=self.oled.draw_display, args=(dict(text="Stopping"),)).start()      
+        self.oled.print("Stopping ...", clear_display=False)

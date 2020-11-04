@@ -3,6 +3,8 @@ import digitalio
 from PIL import Image, ImageDraw, ImageFont
 import adafruit_ssd1306
 
+import threading
+
 import config
 
 class OLED:
@@ -109,3 +111,11 @@ class OLED:
         if "text" in content:
             self.draw_text(content["text"], font='medium', clear_display=True, draw_frame=True)
         self.draw_image()
+    
+    def print(self, text, **kwargs):
+        args = dict(text=text)
+        args['redraw'] = kwargs['redraw'] if 'redraw' in kwargs else True
+        args['clear_display'] = kwargs['clear_display'] if 'clear_display' in kwargs else True
+        args.update(kwargs)
+        #threading.Thread(target=self.draw_text, args=(args,)).start()
+        self.draw_text(**args)
